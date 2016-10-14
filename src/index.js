@@ -2,18 +2,70 @@
 
 // load modules
 var express = require('express');
-var morgan = require('morgan');
-
 var app = express();
 
-// set our port
-app.set('port', process.env.PORT || 5000);
+var jsonParser = require("body-parser").json;
+var morgan = require('morgan');
+var seeder = require('mongoose-seeder');
+var seedData = require('./data/data.json');
+
+var courses = require("./courses");
+var users = require("./users");
+
+/*********************************/
+/** Connect to database
+/*********************************/
+require("./course-model");
+require("./review-model");
+require("./user-model");
+
+var mongoose = require("mongoose");
+mongoose.connect("mongodb://localhost:27017/db");
+
+var db = mongoose.connection;
+
+db.on("error", function(err) {
+	console.error("connection error", err);
+});
+
+db.once("open", function() {
+	seeder.seed(seedData)
+	.catch(function (err) {
+		if (err) {
+			console.log(err);
+		}
+	});
+	console.log("db connection successful");
+});
+/*********************************/
 
 // morgan gives us http request logging
 app.use(morgan('dev'));
+app.use(jsonParser());
+
 
 // setup our static route to serve files from the "public" folder
 app.use('/', express.static('public'));
+app.use('/api/courses', courses);
+app.use('/api/users', courses);
+
+app.use(function (req, res, next) {
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
+});
+
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500);
+  res.json({
+    error: {
+      message: err.message
+    }
+  });
+});
+
+// set our port
+app.set('port', process.env.PORT || 5000);
 
 // start listening on our port
 var server = app.listen(app.get('port'), function() {
