@@ -26,49 +26,17 @@ var UserSchema = new Schema ({
 				
 				var isNotError = emailTest.test(v); // perform the test
 					
-				if (isNotError) {
-					return true;
-				} else {
-					return false;
-				}
+				return isNotError;
 			},
-			message: 'A valid email is required.'
-		}, 
-		validate: { 
-			validator: function (v, callback) {
-				this.model('User').count({ emailAddress: v}, function (err, count) {
-					if (err) return callback(err);
-					callback(!count);
-				});
-			},
-			message: "A unique email address is required."
-		}  
+			message: "A valid email address is required."
+		}
 	},
 	hashedPassword: {
 		type: String,
+		required: [true, "A password is required."],
 		validate: {
 			validator: function() {
-				console.log("validator password = " + this._password);
-				if (this._password) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-			message: "A password is required."
-		},
-		validate: {
-			validator: function() {
-				if (this._confirmPassword) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-			message: "A confirmation password is required."
-		},
-		validate: {
-			validator: function() {
+				
 				if (this._confirmPassword === this._password) {
 					return true;
 				} else {
@@ -85,7 +53,6 @@ UserSchema.virtual('password').get( function () {
 });
 
 UserSchema.virtual('password').set( function (password) {
-	console.log('virtual password = ' + password);
 	this._password = password;
 	var salt = bcrypt.genSaltSync(10);
 	var hash = bcrypt.hashSync(password, salt);
@@ -100,9 +67,14 @@ UserSchema.virtual('confirmPassword').set( function (confirmPassword) {
 	this._confirmPassword = confirmPassword;
 });
 
-UserSchema.path('hashedPassword').validate(function(v) {
-	console.log("test password = " + this._password);
-});
+// Can only have one custom validator inside the Schema.
+UserSchema.path('emailAddress').validate(function (v, callback) {
+
+	this.model('User').findOne({ emailAddress: v}, function (err, user) {
+		if (err) return callback(err);
+		callback(!user);
+	});
+}, "A unique email address is required.");
 
 var User = mongoose.model('User', UserSchema);
 
