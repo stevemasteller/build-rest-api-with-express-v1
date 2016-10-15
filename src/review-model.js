@@ -15,7 +15,23 @@ var ReviewSchema = new Schema ({
 		ref: 'User'
 	},
 	postedOn: Date,
-	rating: Number,
+	rating: {
+		type: Number,
+		required: [true, "A rating is required."],
+		min: [1, 'The minimum rating is 1'],
+		max: [5, 'The maximum rating is 5'],
+		validate: {
+			validator: function(v) {
+				var nearest = Math.ceil(v);
+				if (v === nearest) {
+					return true;
+				} else {
+					return false;
+				}
+			},
+			message: "The rating must be a whole number."
+		}
+	},
 	review: String
 });
 

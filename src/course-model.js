@@ -11,16 +11,30 @@ var CourseSchema = new Schema ({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User'
 	},
-	title: String,
-	description: String,
+	title: {
+		type: String,
+		required: [true, "A course title is required."]
+	},
+	description: {
+		type: String,
+		required: [true, "A course description is required."]
+	},
 	estimatedTime: String,
 	materialsNeeded: String,
-	steps: 
-		[{
+	steps: {
+		type: [{
 			stepNumber: Number,
-			title: String,
-			description: String
+			title: {
+				type: String,
+				required: [true, "A step title is required."]
+			},
+			description: {
+				type: String,
+				required: [true, "A step description is required."]
+			}
 		}],
+		required: [true, "At least one step is required."]
+	},
 	reviews:
 		[{
 			type: mongoose.Schema.Types.ObjectId,
@@ -34,11 +48,7 @@ CourseSchema.virtual('overallRating').get(function() {
 	for (var i = 0; i < this.reviews.lenghth; i++) {
 		sum += this.reviews[i].rating;
 	}
-	if (this.reviews.length === 0) {
-		avg = 0;
-	} else {
-		avg = Math.round( sum / this.reviews.length);
-	}
+	avg = Math.round( sum / this.reviews.length);
 	return avg;
 });
 

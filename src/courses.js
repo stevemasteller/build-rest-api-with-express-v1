@@ -59,7 +59,7 @@ router.get("/:id", function(req, res, next) {
 // Creates a course, sets the Location header, and returns no content.
 router.post("/", function(req, res) {
 	res.json({
-		response: "You sent me a POST request.",
+		response: "You sent me a course POST request.",
 		body: req.body
 	});
 });

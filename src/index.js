@@ -47,7 +47,7 @@ app.use(jsonParser());
 // setup our static route to serve files from the "public" folder
 app.use('/', express.static('public'));
 app.use('/api/courses', courses);
-app.use('/api/users', courses);
+app.use('/api/users', users);
 
 app.use(function (req, res, next) {
   var err = new Error('Not Found');
