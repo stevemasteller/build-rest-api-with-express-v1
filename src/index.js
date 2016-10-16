@@ -2,22 +2,22 @@
 
 // load modules
 var express = require('express');
-var app = express();
-
 var jsonParser = require("body-parser").json;
 var morgan = require('morgan');
 var seeder = require('mongoose-seeder');
 var seedData = require('./data/data.json');
 
-var courses = require("./courses");
-var users = require("./users");
+var courses = require("./routes/courses");
+var users = require("./routes/users");
+
+var app = express();
 
 /*********************************/
 /** Connect to database
 /*********************************/
-require("./course-model");
-require("./review-model");
-require("./user-model");
+require("./models/course-model");
+require("./models/review-model");
+require("./models/user-model");
 
 var mongoose = require("mongoose");
 mongoose.connect("mongodb://localhost:27017/db");
