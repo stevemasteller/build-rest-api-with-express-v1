@@ -45,12 +45,18 @@ var CourseSchema = new Schema ({
 CourseSchema.virtual('overallRating').get(function() {
 	var sum = 0;
 	var avg = 0;
-	for (var i = 0; i < this.reviews.lenghth; i++) {
-		sum += this.reviews[i].rating;
+	
+	if (this.reviews) {
+		for (var i = 0; i < this.reviews.length; i++) {
+			sum += this.reviews[i].rating;
+		}
+		avg = Math.round( sum / this.reviews.length);
 	}
-	avg = Math.round( sum / this.reviews.length);
+
 	return avg;
 });
+
+CourseSchema.set('toJSON', { virtuals: true });
 
 var Course = mongoose.model('Course', CourseSchema);
 

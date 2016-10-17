@@ -14,7 +14,10 @@ var ReviewSchema = new Schema ({
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User'
 	},
-	postedOn: Date,
+	postedOn: {
+		type: Date,
+		default: Date.now
+	},
 	rating: {
 		type: Number,
 		required: [true, "A rating is required."],

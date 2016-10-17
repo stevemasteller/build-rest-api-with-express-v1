@@ -9,17 +9,17 @@ var validationErrors = require("./validationErrors");
 var authorization = require("../middleware/authorization");
 
 // Returns the currently authenticated user.
-router.get("/", authorization, function(req, res) {
+router.get("/", authorization, function(req, res, next) {
 	
-	var body = {};
-	body.data = [];
-	body.data.push(req.course);
-	
-	res.json(body);
+	var user = {};
+	user.data = [];
+	user.data.push(req.user);
+
+	res.json(user);
 });
 
 // Creates a user, sets the Location header to "/" and returns no content.
-router.post("/", authorization, function(req, res, next) {
+router.post("/", function(req, res, next) {
 	var registerUser = new User();
 	
 	if (req.body.fullName) {

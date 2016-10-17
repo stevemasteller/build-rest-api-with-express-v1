@@ -12,18 +12,18 @@ var authorization = function (req, res, next) {
 		
 		return res.status(401).send();
 	} else {
-		
-		User.findOne({emailAddress: credentials.name}, function (err, emailAddress) {
+
+		User.findOne({emailAddress: credentials.name}, function (err, user) {
 			
 			if (err) return next(err);
 			
-			if (emailAddress) {
-			
-				var compare = bcrypt.compareSync(credentials.pass, emailAddress.hashedPassword);
+			if (user) {
+				
+				var compare = bcrypt.compareSync(credentials.pass, user.hashedPassword);
+
 				if (compare) {
-					
-					req.user = emailAddress;
-					return(next);
+					req.user = user;
+					return next();
 				} else {
 					return res.status(401).send();
 				}

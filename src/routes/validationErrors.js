@@ -16,7 +16,6 @@ var validationErrors = function (err, res) {
 				message: err.errors[i].message
 			}];
 		}
-		console.log(validation);
 		return res.status(400).json(validation);;
 	} else {
 		return next(err);
