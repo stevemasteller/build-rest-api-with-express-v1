@@ -23,21 +23,15 @@ var ReviewSchema = new Schema ({
 		required: [true, "A rating is required."],
 		min: [1, 'The minimum rating is 1'],
 		max: [5, 'The maximum rating is 5'],
-		validate: {
-			validator: function(v) {
-				var nearest = Math.ceil(v);
-				if (v === nearest) {
-					return true;
-				} else {
-					return false;
-				}
-			},
-			message: "The rating must be a whole number."
-		}
 	},
 	review: String
 });
 
+ReviewSchema.pre('save', function(next) {
+	var course = this;
+	course.rating = Math.round(course.rating);
+	next();
+});
 
 var Review = mongoose.model('Review', ReviewSchema);
 

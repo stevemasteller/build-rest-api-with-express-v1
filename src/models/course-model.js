@@ -41,7 +41,7 @@ var CourseSchema = new Schema ({
 			ref: 'Review'
 		}]
 });
-	
+
 CourseSchema.virtual('overallRating').get(function() {
 	var sum = 0;
 	var avg = 0;
