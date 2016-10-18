@@ -1,6 +1,7 @@
 "use strict";
 
 var express = require("express");
+var createError = require('http-errors');
 var router = express.Router();
 var Course = require("../models/course-model");
 var Review = require("../models/review-model");
@@ -27,19 +28,18 @@ router.get("/", function(req, res, next) {
 	res.json(body);
 */
 
-	Course.find({}, '_id title', function (err, result) {
+	Course.find({}, '_id title', function (err, courses) {
 		
 		if (err) return next(err);
 		
-		if (!result) {
-			err = new Error("Course not found");
-			err.status = 404;
-			return next(err);
-		}
+		if (!courses) {
+			return next(createError(404, "Courses not found"));
+		} else {
 		
-		var body = {};
-		body.data = result;
-		res.json(body);
+			var body = {};
+			body.data = courses;
+			res.json(body);
+		}
 	});
 });
 
@@ -47,20 +47,19 @@ router.get("/", function(req, res, next) {
 router.get("/:id", function(req, res, next) {
 	Course.findById(req.params.id)
 	.populate('reviews').populate('user')
-	.exec(function(err, result) {
+	.exec(function(err, course) {
 		
 		if (err) return next(err);
 		
-		if (!result) {
-			err = new Error("Course not found");
-			err.status = 404;
-			return next(err);
-		}
+		if (!course) {
+			return next(createError(404, "Course not found"));
+		} else {
 
-		var body = {};
-		body.data = [];
-		body.data.push(result);
-		res.json(body);
+			var body = {};
+			body.data = [];
+			body.data.push(course);
+			res.json(body);
+		}
 	});
 });
 
@@ -84,29 +83,34 @@ router.put("/:id", authorization, function(req, res, next) {
 	
 	Course.findById(req.params.id)
 	.populate('reviews')
-	.exec(function(err, result) {
+	.exec(function(err, course) {
 		
 		if (err) return next(err);
 		
-		if (!result) {
-			err = new Error("Course not found");
-			err.status = 404;
-			return next(err);
+		if (!course) {
+			return next(createError(404, "Course not found"));
+		} else {
+		
+			var user = req.user._id.toJSON();
+			var courseOwner = course.user.toJSON();
+					
+			var authorized = (user === courseOwner);
+					
+			if (!authorized) {
+				return next(createError(401, "Not authorized"));
+			} else {
+						
+				req.course = course;
+							
+				req.course.update(req.body, {runValidators: true}, function (err, course) {
+				
+					if (err) return validationErrors(err, res);
+					
+					res.status(204);
+					res.end();
+				});
+			}
 		}
-		
-		req.course = result;
-		
-		for (var i = 0; i < req.body.steps.length; i++) {
-			req.body.steps[i].stepNumber = i + 1;
-		}
-		
-		req.course.update(req.body, {runValidators: true}, function (err, course) {
-		
-			if (err) return validationErrors(err, res);
-			
-			res.status(204);
-			res.end();
-		});
 	});	
 });
 
@@ -119,74 +123,64 @@ router.post("/:courseId/reviews", authorization, function(req, res, next) {
 		if (err) return next(err);
 		
 		if (!course) {
-			err = new Error("Course not found");
-			err.status = 404;
-			return next(err);
-		}
+			return next(createError(404, "Course not found"));
+		} else {
 
-		var review = new Review(req.body);
-		course.reviews.push(review);
-		
-		course.save( function (err) {
-			if (err) return next(err);
-		});
-		
-		review.save( function (err) {
-
-			if (err) return validationErrors(err, res);
+			var review = new Review(req.body);
+			review.user = req.user._id;
 			
-			res.status(201);
-			res.location("/courses/" + course._id);
-			res.end();
-		});
+			course.reviews.push(review);
+			
+			course.save( function (err) {
+
+				if (err) return next(err);
+			});
+			
+			review.save( function (err) {
+
+				if (err) return validationErrors(err, res);
+				
+				res.status(201);
+				res.location("/courses/" + course._id);
+				res.end();
+			});
+		}
 	});
 });
 
 // Deletes the specified review and returns no content.
 router.delete("/:courseId/reviews/:id", authorization, function(req, res, next) {
 	
-	var reviewOwner = '';
-	var courseOwner = '';
-	var user = '';
-	
-	var authorize = Review.findOne({_id: req.params.id})
+	Review.findOne({_id: req.params.id})
 		.populate('user')
 		.exec( function (err, review) {
 		
-		if (err) {
-			return next(err);
+		if (err) return next(err);
+		
+		if (!review) {
+			return next(createError(404, "Review not found"));
 		} else {
 		
-			if (!review) {
-				err = new Error("Review not found");
-				err.status = 404;
-				return next(err);
-			} else {
-			
-				reviewOwner = review.user._id;
-				console.log('review = ' + review);
-	
-				Course.findOne({_id: req.params.courseId})
-				.exec( function(err, course) {
-						
-					if (err) return next(err);
+			Course.findOne({_id: req.params.courseId})
+			.exec( function(err, course) {
 					
-					if (!course) {
-						err = new Error("Course not found");
-						err.status = 404;
-						return next(err);
+				if (err) return next(err);
+				
+				if (!course) {
+					return next(createError(404, "Course not found"));
+				} else {
+					
+					var user = req.user._id.toJSON();
+					var reviewOwner = review.user._id.toJSON();
+					var courseOwner = course.user.toJSON();
+					
+					var authorized = (user === reviewOwner) || (user === courseOwner);
+					
+					if (!authorized) {
+						
+						return next(createError(401, "Not authorized"));
 					} else {
 					
-			//			console.log('course = ' + course);
-						courseOwner = course.user;
-						user = req.user._id;
-						
-						console.log('reviewOwner = ' + reviewOwner);
-						console.log('courseOwner = ' + courseOwner);
-						console.log('user = ' + req.user._id)
-						
-			//			if (req.user._id !== )
-						
 						Review.findOne({_id: req.params.id})
 						.remove()
 						.exec( function (err) {
@@ -196,8 +190,8 @@ router.delete("/:courseId/reviews/:id", authorization, function(req, res, next) 
 						res.status(204);
 						res.end();
 					}
-				});
-			}
+				}
+			});
 		}
 	});
 });

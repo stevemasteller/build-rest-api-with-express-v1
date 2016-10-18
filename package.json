@@ -20,6 +20,7 @@
     "bcryptjs": "^2.3.0",
     "body-parser": "^1.15.2",
     "express": "^4.13.4",
+    "http-errors": "^1.5.0",
     "jquery": "^2.2.2",
     "mongoose": "^4.6.3",
     "mongoose-seeder": "^1.2.1",
