@@ -46,9 +46,8 @@ ReviewSchema.pre('save', function(next) {
 		if (err) return next(err);
 		
 		var userReviews = JSON.stringify(results);
-		var emptyArray = [];
 		
-		if (userReviews !== '[]') {
+		if (userReviews.indexOf(user) !== -1 ) {
 			var err = new Error;
 			var errors = [{
 				"message": "A user can only have one revew per course."
@@ -57,8 +56,9 @@ ReviewSchema.pre('save', function(next) {
 			err.errors = errors;
 
 			next(err);
+		} else {
+			next();
 		}
-		next();
 	});
 });
 
