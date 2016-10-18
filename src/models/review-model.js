@@ -36,9 +36,6 @@ ReviewSchema.pre('save', function(next) {
 });
 
 ReviewSchema.pre('save', function(next) {
-//	console.log('this = ' + this);
-	console.log('this.user = ' + this.user);
-	console.log('this._id = ' + this._id);
 	var user = this.user;
 	var id = this._id;
 	
@@ -51,7 +48,6 @@ ReviewSchema.pre('save', function(next) {
 		var userReviews = JSON.stringify(results);
 		var emptyArray = [];
 		
-		console.log('review users = ' + userReviews);
 		if (userReviews !== '[]') {
 			var err = new Error;
 			var errors = [{
@@ -59,7 +55,7 @@ ReviewSchema.pre('save', function(next) {
 			}];
 			err.name = "ValidationError";
 			err.errors = errors;
-			console.log('error = ' + err);
+
 			next(err);
 		}
 		next();

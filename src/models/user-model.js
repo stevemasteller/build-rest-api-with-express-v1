@@ -76,6 +76,17 @@ UserSchema.path('emailAddress').validate(function (v, callback) {
 	});
 }, "A unique email address is required.");
 
+UserSchema.path('hashedPassword').validate(function (v, callback) {
+	
+	var regEx = new RegExp("^(?=.{8,})");
+	
+	var isNotError = regEx.test(this._password);
+	
+	return isNotError;
+	
+}, "The password must contain at least 8 characters.");
+
+
 var User = mongoose.model('User', UserSchema);
 
 module.exports = User;
