@@ -35,6 +35,7 @@ ReviewSchema.pre('save', function(next) {
 	next();
 });
 
+// verification 
 ReviewSchema.pre('save', function(next) {
 	var user = this.user;
 	var id = this._id;
@@ -57,6 +58,34 @@ ReviewSchema.pre('save', function(next) {
 
 			next(err);
 		} else {
+			next();
+		}
+	});
+});
+
+// verification 
+ReviewSchema.pre('save', function(next) {
+	var user = this.user;
+	var id = this._id;
+	
+Course.find({'reviews': this._id}, 'user')
+	.populate('reviews').populate('users')
+	.exec( function (err, results) {
+		
+		if (err) return next(err);
+		
+		var userReviews = JSON.stringify(results);
+		
+		if (userReviews.indexOf(user) !== -1 ) {
+			var err = new Error;
+			var errors = [{
+				"message": "A user can not revew their own course."
+			}];
+			err.name = "ValidationError";
+			err.errors = errors;
+
+			next(err);
+		} else { 
 			next();
 		}
 	});
