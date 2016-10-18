@@ -70,7 +70,7 @@ router.post("/", authorization, function(req, res, next) {
 	
 	course.save( function (err) {
 
-		if (err) return validationErrors(err, res);
+		if (err) return validationErrors(err, res, next);
 		
 		res.status(201);
 		res.location("/courses/" + course._id);
@@ -104,7 +104,7 @@ router.put("/:id", authorization, function(req, res, next) {
 							
 				req.course.update(req.body, {runValidators: true}, function (err, course) {
 				
-					if (err) return validationErrors(err, res);
+					if (err) return validationErrors(err, res, next);
 					
 					res.status(204);
 					res.end();
@@ -138,7 +138,7 @@ router.post("/:courseId/reviews", authorization, function(req, res, next) {
 			
 			review.save( function (err) {
 
-				if (err) return validationErrors(err, res);
+				if (err) return validationErrors(err, res, next);
 				
 				res.status(201);
 				res.location("/courses/" + course._id);

@@ -40,7 +40,7 @@ router.post("/", function(req, res, next) {
 	
 	registerUser.save( function (err) {
 		
-		if (err) return validationErrors(err, res);
+		if (err) return validationErrors(err, res, next);
 		
 		res.status(201);
 		res.location('/');

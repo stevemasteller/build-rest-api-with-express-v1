@@ -1,5 +1,5 @@
 
-var validationErrors = function (err, res) {
+var validationErrors = function (err, res, next) {
 
 	// if error save in following JSON format for angular app.
 	// { "message": "Validation Failed", "errors": { "property": [ { "code": "", "message": "" }, ... ] } } 
