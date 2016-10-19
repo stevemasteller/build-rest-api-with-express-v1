@@ -1,12 +1,23 @@
 "use strict";
 
 var express = require("express");
+var createError = require('http-errors');
 var router = express.Router();
 var Course = require("../models/course-model");
 var Review = require("../models/review-model");
 var User = require("../models/user-model");
 var validationErrors = require("./validationErrors");
 var authorization = require("../middleware/authorization");
+
+router.put("/", function(req, res, next) {
+	
+	next(createError(403, "Cannot edit a collection of users."));
+});
+
+router.delete("/", function(req, res, next) {
+	
+	next(createError(403, "Cannot delete a collection of users."));
+});
 
 // Returns the currently authenticated user.
 router.get("/", authorization, function(req, res, next) {

@@ -2,6 +2,7 @@
 
 // load modules
 var express = require('express');
+var createError = require('http-errors');
 var jsonParser = require("body-parser").json;
 var morgan = require('morgan');
 var seeder = require('mongoose-seeder');
@@ -50,18 +51,16 @@ app.use('/api/courses', courses);
 app.use('/api/users', users);
 
 app.use(function (req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+	next(createError(404, "Not found"));
 });
 
 app.use(function (err, req, res, next) {
-  res.status(err.status || 500);
-  res.json({
-    error: {
-      message: err.message
-    }
-  });
+	res.status(err.status || 500);
+	res.json({
+		error: {
+			message: err.message
+		}
+	});
 });
 
 // set our port
@@ -69,5 +68,5 @@ app.set('port', process.env.PORT || 5000);
 
 // start listening on our port
 var server = app.listen(app.get('port'), function() {
-  console.log('Express server is listening on port ' + server.address().port);  
+	console.log('Express server is listening on port ' + server.address().port);  
 });

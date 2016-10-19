@@ -9,6 +9,51 @@ var User = require("../models/user-model");
 var validationErrors = require("./validationErrors");
 var authorization = require("../middleware/authorization");
 
+router.put("/", function(req, res, next) {
+	
+	next(createError(403, "Cannot edit a collection of courses."));
+});
+
+router.delete("/", function(req, res, next) {
+	
+	next(createError(403, "Cannot delete a collection of courses."));
+});
+
+router.post("/:id", function(req, res, next) {
+	
+	next(createError(405, "Use the '/api/courses' route to create a course."));
+});
+
+router.delete("/:id", function(req, res, next) {
+	
+	next(createError(403, "Cannot delete a course."));
+});
+
+router.put("/:courseId/reviews", function(req, res, next) {
+	
+	next(createError(403, "Cannot edit a collection of reviews."));
+});
+
+router.delete("/:courseId/reviews", function(req, res, next) {
+	
+	next(createError(403, "Cannot delete a collection of reviews."));
+});
+
+router.get("/:courseId/reviews/:id", function(req, res, next) {
+	
+	next(createError(403, "Cannot get a single review. Use the '/api/courses/:id' route instead to get the reviews for a specific course."));
+});
+
+router.post("/:courseId/reviews/:id", function(req, res, next) {
+	
+	next(createError(405, "Use the '/api/courses/:courseId/reviews' route to create a review."));
+});
+
+router.put("/:courseId/reviews/:id", function(req, res, next) {
+	
+	next(createError(403, "Cannot edit a review."));
+});
+
 // Returns the Course "_id" and "title" properties
 router.get("/", function(req, res, next) {
 	
