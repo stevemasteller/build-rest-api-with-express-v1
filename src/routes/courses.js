@@ -1,14 +1,24 @@
 "use strict";
 
+/************************************************************/
+/** /api/courses routes
+/************************************************************/
 var express = require("express");
 var createError = require('http-errors');
 var router = express.Router();
+
+// mongoose models
 var Course = require("../models/course-model");
 var Review = require("../models/review-model");
 var User = require("../models/user-model");
+
 var validationErrors = require("./validationErrors");
 var authorization = require("../middleware/authorization");
 
+
+/************************************************************/
+/** unused routes
+/************************************************************/
 router.put("/", function(req, res, next) {
 	
 	next(createError(403, "Cannot edit a collection of courses."));
@@ -54,9 +64,13 @@ router.put("/:courseId/reviews/:id", function(req, res, next) {
 	next(createError(403, "Cannot edit a review."));
 });
 
+/************************************************************/
+/** /api/courses
+/************************************************************/
 // Returns the Course "_id" and "title" properties
 router.get("/", function(req, res, next) {
 	
+// Format used for output data. 
 /*	var body = {
 		"data" : 
 			[
@@ -81,6 +95,7 @@ router.get("/", function(req, res, next) {
 			return next(createError(404, "Courses not found"));
 		} else {
 		
+			// format data for output
 			var body = {};
 			body.data = courses;
 			res.json(body);
@@ -88,8 +103,32 @@ router.get("/", function(req, res, next) {
 	});
 });
 
+// Creates a course, sets the Location header, and returns no content. Requires an authorized user.
+router.post("/", authorization, function(req, res, next) {
+	
+	// create a new course
+	var course = new Course(req.body);
+	
+	// save the new course
+	course.save( function (err) {
+
+		if (err) return validationErrors(err, res, next);
+		
+		// set location to new course and output response
+		res.status(201);
+		res.location("/courses/" + course._id);
+		res.end();
+	});
+});
+
+
+/************************************************************/
+/** /api/courses/:id
+/************************************************************/
 // Returns all course properties and related documents for the provided course ID.
 router.get("/:id", function(req, res, next) {
+	
+	// find a particular course and populate all the data
 	Course.findById(req.params.id)
 	.populate('reviews').populate('user')
 	.exec(function(err, course) {
@@ -100,6 +139,7 @@ router.get("/:id", function(req, res, next) {
 			return next(createError(404, "Course not found"));
 		} else {
 
+			// format data for output
 			var body = {};
 			body.data = [];
 			body.data.push(course);
@@ -108,24 +148,11 @@ router.get("/:id", function(req, res, next) {
 	});
 });
 
-// Creates a course, sets the Location header, and returns no content.
-router.post("/", authorization, function(req, res, next) {
-	
-	var course = new Course(req.body);
-	
-	course.save( function (err) {
-
-		if (err) return validationErrors(err, res, next);
-		
-		res.status(201);
-		res.location("/courses/" + course._id);
-		res.end();
-	});
-});
-
-// Updates a course and returns no content
+// Updates a course and returns no content. Will only work
+// if authorized user is course owner.
 router.put("/:id", authorization, function(req, res, next) {
 	
+	// find a course and populate the reviews 
 	Course.findById(req.params.id)
 	.populate('reviews')
 	.exec(function(err, course) {
@@ -136,21 +163,26 @@ router.put("/:id", authorization, function(req, res, next) {
 			return next(createError(404, "Course not found"));
 		} else {
 		
+			// get authorized user and course owner
 			var user = req.user._id.toJSON();
 			var courseOwner = course.user.toJSON();
 					
+			// verify authorised user is course owner
 			var authorized = (user === courseOwner);
-					
+			
 			if (!authorized) {
+				
+				// not authorized
 				return next(createError(401, "Not authorized"));
 			} else {
 						
+				// update course
 				req.course = course;
-							
 				req.course.update(req.body, {runValidators: true}, function (err, course) {
 				
 					if (err) return validationErrors(err, res, next);
 					
+					// return response
 					res.status(204);
 					res.end();
 				});
@@ -159,10 +191,16 @@ router.put("/:id", authorization, function(req, res, next) {
 	});	
 });
 
-// Creates a review for the specified course ID, sets the Location header to the related course, and returns no content.
+
+/************************************************************/
+/** /api/courses/:courseId/reviews
+/************************************************************/
+// Creates a review for the specified course ID, sets the 
+// Location header to the related course, and returns no content.
+// user must be authorized to create a review.
 router.post("/:courseId/reviews", authorization, function(req, res, next) {
 	
-		
+	// find a particular course, return only the reviews
 	Course.findOne({_id: req.params.courseId}, 'reviews', function (err, course) {
 		
 		if (err) return next(err);
@@ -174,17 +212,19 @@ router.post("/:courseId/reviews", authorization, function(req, res, next) {
 			var review = new Review(req.body);
 			review.user = req.user._id;
 			
+			// save new review id in course
 			course.reviews.push(review);
-			
 			course.save( function (err) {
 
 				if (err) return next(err);
 			});
 			
+			// save review
 			review.save( function (err) {
 
 				if (err) return validationErrors(err, res, next);
 				
+				// set location to current course and send response.
 				res.status(201);
 				res.location("/courses/" + course._id);
 				res.end();
@@ -193,9 +233,14 @@ router.post("/:courseId/reviews", authorization, function(req, res, next) {
 	});
 });
 
+
+/************************************************************/
+/** /api/courses/:courseId/reviews/:id
+/************************************************************/
 // Deletes the specified review and returns no content.
 router.delete("/:courseId/reviews/:id", authorization, function(req, res, next) {
 	
+	// find the review to be deleted.
 	Review.findOne({_id: req.params.id})
 		.populate('user')
 		.exec( function (err, review) {
@@ -206,6 +251,7 @@ router.delete("/:courseId/reviews/:id", authorization, function(req, res, next) 
 			return next(createError(404, "Review not found"));
 		} else {
 		
+			// find the course containing the review to be deleted.
 			Course.findOne({_id: req.params.courseId})
 			.exec( function(err, course) {
 					
@@ -215,23 +261,31 @@ router.delete("/:courseId/reviews/:id", authorization, function(req, res, next) 
 					return next(createError(404, "Course not found"));
 				} else {
 					
+					// get the current authorized user
 					var user = req.user._id.toJSON();
+					// get the review owner from the review previously found
 					var reviewOwner = review.user._id.toJSON();
+					// get the course owner from the course previously found
 					var courseOwner = course.user.toJSON();
 					
+					// verify that the authorized user is either the review or course owner
 					var authorized = (user === reviewOwner) || (user === courseOwner);
 					
 					if (!authorized) {
 						
+						// not authorized
 						return next(createError(401, "Not authorized"));
 					} else {
 					
+						// everything good remove the review
 						Review.findOne({_id: req.params.id})
 						.remove()
 						.exec( function (err) {
+							
 							if (err) return next(err);
 						});
 						
+						// send response
 						res.status(204);
 						res.end();
 					}
@@ -242,4 +296,7 @@ router.delete("/:courseId/reviews/:id", authorization, function(req, res, next) 
 });
 
 
+/************************************************************/
+/** Export routes
+/************************************************************/
 module.exports = router;

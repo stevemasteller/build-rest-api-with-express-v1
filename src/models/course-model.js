@@ -1,10 +1,10 @@
 "use strict";
 
+/************************************************************/
+/** Mongoose Course model
+/************************************************************/
 var mongoose = require("mongoose");
 
-/**
- *
-*/ 
 var Schema = mongoose.Schema;
 var CourseSchema = new Schema ({
 	user: {
@@ -42,10 +42,16 @@ var CourseSchema = new Schema ({
 		}]
 });
 
+
+/************************************************************/
+/** overallRating implemented as a virtual to ensure that it
+/** does not get out of sync with the review ratings.
+/************************************************************/
 CourseSchema.virtual('overallRating').get(function() {
 	var sum = 0;
 	var avg = 0;
 	
+	// don't do calculation if review does not exist
 	if (this.reviews) {
 		for (var i = 0; i < this.reviews.length; i++) {
 			sum += this.reviews[i].rating;
@@ -56,7 +62,12 @@ CourseSchema.virtual('overallRating').get(function() {
 	return avg;
 });
 
-CourseSchema.set('toJSON', { virtuals: true });
+
+/************************************************************/
+/** Export model
+/************************************************************/
+// include virtuals in JSON output
+CourseSchema.set('toJSON', { virtuals: true }); 
 
 var Course = mongoose.model('Course', CourseSchema);
 
