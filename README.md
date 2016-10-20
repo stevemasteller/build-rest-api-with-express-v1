@@ -2,6 +2,6 @@
 
 A course rating system. Uses a mean stack and REST api.
 
-Treehouse Techdegree project 11
+Treehouse Full-Stack Techdegree project 11
 
 My work: node.js, NoSQL ORM mongoose, Express, REST api
